@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>MNIST TEST</title>
+</head>
+<body>
+<h1>MNIST TEST</h1>
+<canvas id="canvas1" width="400" height="400" style="border: 1px solid #999;"></canvas><br><br>
+<input id="clear" type="button" value="Clear" onclick="canvasClear();">
+<input id="submit" type="button" value="Submit" onclick="saveImg();"><br><br>
+<img id="preview"><span id="answer"></span>
+<script src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script>
+var url = 'http://127.0.0.1:8000/cgi-bin/mnist.py';
+var lineWidth = 50;
+var lineColor = '#ffffff';
+var imgW = imgH = 28;
+
+var canvas = document.getElementById('canvas1');
+var ctx = canvas.getContext('2d');
+var cleft = canvas.getBoundingClientRect().left;
+var ctop = canvas.getBoundingClientRect().top;
+var mouseX = mouseY = null;
+
+canvasClear();
+canvas.addEventListener('mousemove', mmove, false);
+canvas.addEventListener('mousedown', mdown, false);
+canvas.addEventListener('mouseup', mouseInit, false);
+canvas.addEventListener('mouseout', mouseInit, false); 
+
+function mmove(e){
+    if (e.buttons == 1 || e.witch == 1) {
+        draw(e.clientX - cleft, e.clientY - ctop);
+    };
+}
+
+function mdown(e){
+    draw(e.clientX - cleft, e.clientY - ctop);
+}
+
+function draw(x, y){
+    ctx.beginPath();
+    if(mouseX === null) ctx.moveTo(x, y);
+    else ctx.moveTo(mouseX, mouseY);
+    ctx.lineTo(x, y);
+    ctx.lineCap = "round";
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = lineColor;
+    ctx.stroke();
+    mouseX = x;
+    mouseY = y;
+}
+
+function mouseInit(){
+    mouseX = mouseY = null;
+}
+
+function canvasClear(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    $('#preview').attr('src', '');
+    $('#answer').empty();
+}
+
+function toImg(){
+    var tmp = document.createElement('canvas');
+    tmp.width = imgW;
+    tmp.height = imgH;
+    var tmpCtx = tmp.getContext('2d');
+    tmpCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, imgW, imgH);
+    var img = tmp.toDataURL('image/jpeg');
+    $('#preview').attr('src', img)
+    return img;
+}
+
+function saveImg(){
+    var img = toImg();
+    console.log(img);
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {img: img},
+        dataType: 'json',
+        success: function(data){
+            if(data.status){
+                $('#answer').html('は、' + data.num + 'です');
+            }else{
+                $('#answer').html('は、分かりません');
+            }
+        },
+    });
+}
+</script>
+</body>
+</html>
