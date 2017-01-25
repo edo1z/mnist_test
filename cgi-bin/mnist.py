@@ -12,9 +12,7 @@ import numpy as np
 from io import BytesIO
 from binascii import a2b_base64
 
-from mytensor import MyTensor
-
-import logging
+import mytensor
 
 print('Content-Type: text/json; charset=utf-8')
 print()
@@ -26,8 +24,8 @@ if os.environ['REQUEST_METHOD'] == 'POST':
         b64_str = img_str.split(',')[1]
         img = Image.open(BytesIO(a2b_base64(b64_str))).convert('L')
         img_arr = np.array(img).reshape(1, -1)
-        tf = MyTensor()
-        result = tf.predict(img_arr)
+        img_arr = img_arr / 255
+        result = mytensor.predict(img_arr)
         print(json.dumps({'status': True, 'num': result}))
         sys.exit()
 print(json.dumps({'status': False, 'num': False}))
